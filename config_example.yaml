@@ -1,0 +1,44 @@
+# Example config for GNN_trading
+seed: 42
+device: auto   # 'cpu' or 'cuda' or 'auto'
+
+data:
+  window: 60
+  pred_horizon: 5
+  multi_asset: false
+  corr_edge_threshold: 0.6
+
+labels:
+  breakout_lookback: 20
+  breakout_pct: 0.01
+  vol_z_threshold: 0.0
+  confirm_days: 0
+
+ssl:
+  epochs: 6
+  batch_size: 64
+  feat_mask_ratio: 0.15
+  jitter_std: 0.01
+  temperature: 0.2
+  lr: 0.001
+
+model:
+  hid: 64
+  heads: 2
+  gru_hid: 64
+  dropout: 0.2
+
+supervised:
+  epochs: 8
+  lr: 0.001
+
+walkforward:
+  n_splits: 4
+  min_train_size: 600
+
+news:
+  use_news: true
+  model_name: ProsusAI/finbert
+  text_col: headline
+  max_per_day: 20
+  fusion: late   # 'late' or 'cross_attention'
