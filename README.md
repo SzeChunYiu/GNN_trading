@@ -36,12 +36,21 @@ python -m gnn_trading.ssl_pretrain --ohlcv your_ohlcv.csv --date_col date
 # 2) Supervised fine-tune + walk-forward evaluation
 python -m gnn_trading.train --ohlcv your_ohlcv.csv --date_col date --walkforward
 
+# 3) Multi-company supervised training (shared encoder)
+python -m gnn_trading.train_multi \
+  --ohlcv_dir database/companies \
+  --out_dir outputs/train_multi \
+  --walkforward
+
 # 3) (Optional) Include news
 python -m gnn_trading.train --ohlcv your_ohlcv.csv --news your_news.csv --date_col date --text_col headline
 
 # 4) Backtest a simple breakout strategy
 python -m gnn_trading.backtest --signals outputs/signals.csv --ohlcv your_ohlcv.csv
 ```
+
+> Note: `gnn_trading.ssl_pretrain` continues to operate on a single-company
+> dataset; `train_multi` only changes the supervised fine-tuning stage.
 
 ### Input formats
 

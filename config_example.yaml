@@ -1,19 +1,47 @@
-# Example config for GNN_trading
-seed: 42
-device: auto   # 'cpu' or 'cuda' or 'auto'
+# Example configuration illustrating legacy model knobs and new feature flags.
 
+seed: 42
+device: auto
+
+# Data and ingestion controls
 data:
+  start_date: 2015-01-01
+  end_date: null
   window: 60
   pred_horizon: 5
   multi_asset: false
   corr_edge_threshold: 0.6
+  providers:
+    prices:
+      - stooq
+      - yfinance
+    fundamentals: sec_xbrl
+    news:
+      - gdelt
+      - sec_filings
+  reporting_delay_days: 3
 
+# Feature builder defaults
+features:
+  lookback: 120
+
+# Label generation defaults
 labels:
   breakout_lookback: 20
   breakout_pct: 0.01
   vol_z_threshold: 0.0
   confirm_days: 0
+  horizons:
+    - 5
+    - 20
+    - 50
 
+# Graph edges for cross-sectional models
+edges:
+  topk: 5
+  use_sector: true
+
+# Self-supervised pre-training
 ssl:
   epochs: 6
   batch_size: 64
@@ -22,6 +50,7 @@ ssl:
   temperature: 0.2
   lr: 0.001
 
+# Supervised model architecture
 model:
   hid: 64
   heads: 2
@@ -41,4 +70,16 @@ news:
   model_name: ProsusAI/finbert
   text_col: headline
   max_per_day: 20
-  fusion: late   # 'late' or 'cross_attention'
+  fusion: late
+
+registry:
+  path: ./models/gnn_crosssec
+
+llm:
+  enabled: false
+  provider: openai
+  schema_strict: true
+  rate_limit_per_min: 20
+
+ui:
+  enabled: false
