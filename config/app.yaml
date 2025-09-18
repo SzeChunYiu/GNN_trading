@@ -1,0 +1,39 @@
+# Application configuration for GNN_trading (feature-gated defaults)
+
+data:
+  start_date: null
+  end_date: null
+  providers:
+    prices:
+      - stooq
+      - yfinance
+    fundamentals: sec_xbrl
+    news:
+      - gdelt
+      - sec_filings
+  reporting_delay_days: 3
+
+features:
+  lookback: 120
+
+labels:
+  horizons:
+    - 5
+    - 20
+    - 50
+
+edges:
+  topk: 5
+  use_sector: true
+
+registry:
+  path: ./models/gnn_crosssec
+
+llm:
+  enabled: false
+  provider: openai
+  schema_strict: true
+  rate_limit_per_min: 20
+
+ui:
+  enabled: false

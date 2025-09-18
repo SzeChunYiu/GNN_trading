@@ -50,5 +50,54 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     df['slope_low_10']  = slope(df['low'], 10)
     df['slope_close_10']= slope(df['close'],10)
     df['slope_gap']     = df['slope_high_10'] - df['slope_low_10']
+
+    # Chip distribution features summarise where recent volume accumulated by price.
+    window = 60
+    bins = 20
+    close_vals = df['close'].to_numpy(dtype=float)
+    vol_vals = df['volume'].to_numpy(dtype=float)
+    chip_main = np.full(len(df), np.nan, dtype=float)
+    chip_concentration = np.full(len(df), np.nan, dtype=float)
+    chip_support = np.full(len(df), np.nan, dtype=float)
+    chip_resistance = np.full(len(df), np.nan, dtype=float)
+
+    for idx in range(window - 1, len(df)):
+        price_window = close_vals[idx - window + 1 : idx + 1]
+        vol_window = vol_vals[idx - window + 1 : idx + 1]
+        if not np.isfinite(price_window).all() or not np.isfinite(vol_window).all():
+            continue
+        total_vol = vol_window.sum()
+        if total_vol <= 0:
+            continue
+        price_min = float(price_window.min())
+        price_max = float(price_window.max())
+        if price_max <= price_min + 1e-9:
+            centers = np.array([price_min], dtype=float)
+            hist = np.array([total_vol], dtype=float)
+        else:
+            edges = np.linspace(price_min, price_max, bins + 1)
+            hist, edges = np.histogram(price_window, bins=edges, weights=vol_window)
+            centers = 0.5 * (edges[:-1] + edges[1:])
+        if hist.sum() <= 0:
+            continue
+        max_idx = int(hist.argmax())
+        chip_main[idx] = float(centers[max_idx])
+        chip_concentration[idx] = float(hist[max_idx] / hist.sum())
+
+        current_price = close_vals[idx]
+        below_mask = centers < current_price - 1e-9
+        above_mask = centers > current_price + 1e-9
+        at_mask = ~(below_mask | above_mask)
+        below_vol = hist[below_mask].sum()
+        above_vol = hist[above_mask].sum()
+        at_vol = hist[at_mask].sum()
+        denom = hist.sum() + 1e-9
+        chip_support[idx] = float((below_vol + 0.5 * at_vol) / denom)
+        chip_resistance[idx] = float((above_vol + 0.5 * at_vol) / denom)
+
+    df['chip_main_price'] = chip_main
+    df['chip_concentration'] = chip_concentration
+    df['chip_support_ratio'] = chip_support
+    df['chip_resistance_ratio'] = chip_resistance
     df = df.replace([np.inf, -np.inf], np.nan)
     return df
